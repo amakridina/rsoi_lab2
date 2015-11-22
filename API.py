@@ -22,11 +22,13 @@ def login():
             )
 
         db = pyodbc.connect(connStr)
-        select_str = "select count(*) as num from Users"
+        select_str =("select count(*) as num from Users"+
+                     " where UserName = '%s' and Password = '%s'"
+                     % (username, password))
         cursor = db.execute(select_str)
         row = cursor.fetchone()
-        if row:
-            return str(row.num)
+        if row.num == 0:
+            return ("Incorrect login or password")
         return 'WELCOME TO MUSIC LIB'
     return app.send_static_file('auth.html')
 
