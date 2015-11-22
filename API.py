@@ -22,7 +22,7 @@ def login():
             )
 
         db = pyodbc.connect(connStr)
-        select_str = 'select count(*) as num from Users'
+        select_str = "select count(*) as num from Users"
         cursor = db.execute(select_str)
         row = cursor.fetchone()
         if row:
@@ -46,14 +46,21 @@ def registerForm():
             r'Database=rsoi;' +
             r'UID=rsoi;PWD=Aa123456'
             )
-
         db = pyodbc.connect(connStr)
+
+        select_str = ("select count(*) as num from Users where UserName = '%s'"% username)
+        cursor = db.execute(select_str)
+        row = cursor.fetchone()
+        if row.num > 0:
+            return ("User '%s' already exists!"% username)
+        
         insert_str  = ("insert into Users"+
                        " (UserName, FirstName, LastName, Telephone, Email, Password)"+
                        " values ('%s','%s','%s','%s','%s','%s' )"
                        % (username, first_name, last_name, tel, email, password))
         db.execute(insert_str)
         db.commit()
+        
         return 'Are you registered'
     return app.send_static_file('register.html')
 
