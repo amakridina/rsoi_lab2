@@ -1,7 +1,9 @@
 # -*- coding: cp1251 -*-
-from flask import Flask,redirect,request,render_template
+from flask import Flask,redirect,request,render_template,jsonify
 import requests
 import pyodbc
+import json
+import uuid
 
 app = Flask(__name__, static_path='')
 
@@ -18,6 +20,18 @@ def connectDB():
             r'UID=rsoi;PWD=Aa123456'
             )
     return pyodbc.connect(connStr)
+
+#проверка токена в бд
+def UserToken(DB, token):
+    if token == '':
+        return None
+    select_str = ("select UserName from AppTokens where Token = '%s'" % token)
+    cursor = DB.execute(select_str)
+    row = cursor.fetchone()
+    if not row:
+        return None
+    return row.UserName   
+    
 
 #авторизация
 @app.route("/login", methods=['GET', 'POST'])
@@ -89,15 +103,38 @@ def access_token():
     return None
 
 #метод получения статуса пользователя авторизован/не авторизован
-#@app.route("/api/status")
-#def myStatus:
-    
+@app.route("/api/status")
+def myStatus():
+    return None
+
+
+#поиск пользователя
+def UserInfo(DB, username):
+    if username == '':
+        return None
+    select_str = ("select "+
+                  "UserName,FirstName,LastName,Telephone,Email "+
+                  "from Users where UserName = '%s'" % username)
+    cursor = DB.execute(select_str)
+    row = cursor.fetchone()
+    if not row:
+        return None
+    return row 
 
 #метод получения информации о пользователе
 @app.route("/api/me", methods=["GET"])
 def userInfo():
-    userInfo = "kj"
-    return userInfo
+    token = request.args.get('access_token', '')
+    db = connectDB()
+    username = UserToken(db, token)
+    if username is None:
+       return "Error!"
+    Info = UserInfo(db, username)
+    return jsonify(UserName=Info.UserName,
+                FirstName=Info.FirstName,
+                LastName=Info.LastName,
+                Telephone=Info.Telephone,
+                Email=Info.Email)
 
 if __name__ == "__main__":
  app.run(debug=True, port=27010)
