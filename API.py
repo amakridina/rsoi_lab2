@@ -23,7 +23,7 @@ def connectDB():
 
 #проверка токена в бд
 def UserToken(DB, token):
-    if token == '':
+    if not token:
         return None
     select_str = ("select UserName from AppTokens where Token = '%s'" % token)
     cursor = DB.execute(select_str)
@@ -94,7 +94,9 @@ def registerForm():
 def userCode():
     #in: appId, redirectUri
     #out: code
-    
+    username = request.args.get('user_name')
+    if not username :
+        return redirect ('/login?'+request.args)
     return "code"
 
 # получение access_token
@@ -124,7 +126,7 @@ def UserInfo(DB, username):
 #метод получения информации о пользователе
 @app.route("/api/me", methods=["GET"])
 def userInfo():
-    token = request.args.get('access_token', '')
+    token = request.args.get('access_token')
     db = connectDB()
     username = UserToken(db, token)
     if username is None:
