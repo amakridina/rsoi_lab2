@@ -215,7 +215,7 @@ def code_insert(code, username):
 
 def client_secret_check(client_id, secret_id):
     cursor = users_db_conn()
-    cursor.execute("select * from dbo.apps where client_id='" + client_id+"'")
+    cursor.execute("select * from Apps where client_id='" + client_id+"'")
     row = cursor.fetchone()
     if row.secret_id.find(secret_id)!=-1:
         return 1
@@ -223,7 +223,7 @@ def client_secret_check(client_id, secret_id):
 
 def code_check(code):
     cursor = users_db_conn()
-    cursor.execute("select * from dbo.UsersInfo where code='" + code+"'")
+    cursor.execute("select * from AppCodes where Code='" + code+"'")
     row = cursor.fetchone()
     if row:
         return row.phone
@@ -231,24 +231,24 @@ def code_check(code):
 
 def refresh_token_check(refresh_token):
     cursor = users_db_conn()
-    cursor.execute("select * from dbo.UsersInfo where refresh_token='" + refresh_token+"'")
+    cursor.execute("select * from Tokens where RefreshToken='" + refresh_token+"'")
     row = cursor.fetchone()
     if row:
-        return row.phone
+        return row.UserName
     return 0;
 
-def insert_token(phone, access_token, expire_time, refresh_token):
+def insert_token(user_name, access_token, expire_time, refresh_token):
     cursor = users_db_conn()
-    cursor.execute("update dbo.UsersInfo set refresh_token='"+refresh_token+"' where phone='" + phone+"'")
-    cursor.execute("update dbo.UsersInfo set access_token='"+access_token+"' where phone='" + phone+"'")
-    cursor.execute("update dbo.UsersInfo set expired='"+str(expire_time)+"' where phone='" + phone+"'")
+    cursor.execute("update Tokens set RefreshToken='"+refresh_token+"' where UserName='" + user_name+"'")
+    cursor.execute("update Tokens set AccessToken='"+access_token+"' where UserName='" + user_name+"'")
+    cursor.execute("update Tokens set Expires='"+str(expire_time)+"' where UserName='" + user_name+"'")
     cursor.commit()
     return 1;
 
 def expired_check(refresh_token):
     cursor = users_db_conn()
     print refresh_token
-    cursor.execute("select * from dbo.UsersInfo where refresh_token='" + refresh_token+"'")
+    cursor.execute("select * from Tokens where RefreshToken='" + refresh_token+"'")
     row = cursor.fetchone()
     if row:
         print datetime.now()
@@ -260,7 +260,7 @@ def expired_check(refresh_token):
 
 def expired_check1(access_token):
     cursor = users_db_conn()
-    cursor.execute("select * from dbo.UsersInfo where access_token='" + access_token+"'")
+    cursor.execute("select * from Tokens where AccessToken='" + access_token+"'")
     row = cursor.fetchone()
     time30 = timedelta(minutes=0)
     if row:
@@ -278,7 +278,7 @@ def expired_check1(access_token):
 def expired_refresh(refresh_token):
     cursor = users_db_conn()
     expire_time = datetime.now() + timedelta(minutes=10)
-    cursor.execute("update dbo.UsersInfo set expired='"+str(expire_time)+"' where refresh_token='" + refresh_token+"'")
+    cursor.execute("update Tokens set expires='"+str(expire_time)+"' where RefreshToken='" + refresh_token+"'")
     cursor.commit()
     return 1;
 
