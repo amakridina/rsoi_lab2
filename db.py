@@ -19,7 +19,7 @@ def users_db_conn():
 
 def user_exist(username):
     cursor = users_db_conn()
-    cursor.execute("select * from dbo.Users where UserName='" + username+"'")
+    cursor.execute("select * from Users where UserName='" + username+"'")
     row = cursor.fetchone()
     if row:
         return 1
@@ -27,11 +27,8 @@ def user_exist(username):
         return 0
 
 def client_exist(client_id):
-    db = users_db_conn()
-    select_str =("select count(*) as num from Users"+
-                     " where UserName = '%s' and Password = '%s'"
-                     % (username, password))
-    cursor = db.execute(select_str)
+    cursor = users_db_conn()
+    cursor.execute("select * from Apps where client_id='" + client_id+"'")
     row = cursor.fetchone()
     if row:
         return 1
@@ -188,10 +185,10 @@ def del_film(id):
 ###########################
 def read_redirect(client_id):
     cursor = users_db_conn()
-    cursor.execute("select * from dbo.apps where AppName='" + client_id+"'")
+    cursor.execute("select * from Apps where client_id='" + client_id+"'")
     row = cursor.fetchone()
     if row:
-        return row.RedirectURL
+        return row.redirect_uri
     return 0;
 
 def user_pass_check(username, password):
@@ -205,10 +202,10 @@ def user_pass_check(username, password):
         return 0
     return 1;
 
-def code_insert(code, phone):
+def code_insert(code, username):
     try:
         cursor = users_db_conn()
-        cursor.execute("update dbo.UsersInfo set code='"+code+"' where phone='" + phone+"'")
+        cursor.execute("update AppCodes set code='"+code+"' where UserName='" + username+"'")
         cursor.commit()
     except ValueError:
         return 1
