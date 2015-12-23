@@ -176,6 +176,74 @@ def me():
                 Telephone=Info.Telephone,
                 Email=Info.Email)
 
+#########################################
+#Artist
+@app.route('/artist/', methods=['GET'])
+def get_artist():
+    access_token = request.headers.get('Authorization', '')[len('OAUTH-TOKEN '):]
+    print access_token
+    i = expired_check1(access_token)
+    if i==0:
+        return json.dumps({'error': 'invalid_token'}), 400, {
+            'Content-Type': 'application/json;charset=UTF-8'}
+    if i==1:
+        return json.dumps({'error': 'expired_token'}), 400, {
+            'Content-Type': 'application/json;charset=UTF-8'}
+    try:
+        per_page = int(request.args.get('per_page', 20))
+        if per_page < 20 or per_page > 100:
+            raise Exception()
+        page = int(request.args.get('page', 0))
+        lendb = len_db_dirs()
+        print lendb
+        if lendb % per_page > 0:
+            b = 1
+        else:
+            b = 0
+        if page < 0 or page > lendb / per_page + b:
+            raise Exception()
+    except:
+        return '', 400
 
+    items = []
+    items = directors_from_db(page, per_page)
+    return json.dumps({
+        'items': items,
+        'per_page': per_page,
+        'page': page,
+        'page_count': math.ceil(lendb / per_page + b)
+    }, indent=4), 200, {
+        'Content-Type': 'application/json;charset=UTF-8',
+    }
+
+#########################################
+#Tracks
+@app.route('/track/', methods=['GET'])
+def get_track():
+    try:
+        per_page = int(request.args.get('per_page', 20))
+        if per_page < 20 or per_page > 100:
+            raise Exception()
+        page = int(request.args.get('page', 0))
+        lendb = len_db()
+        if lendb % per_page > 0:
+            b = 1
+        else:
+            b = 0
+        if page < 0 or page > lendb / per_page + b:
+            raise Exception()
+    except:
+        return '', 400
+
+    items = []
+    items = track_from_db(page, per_page)
+    return json.dumps({
+        'items': items,
+        'per_page': per_page,
+        'page': page,
+        'page_count': math.ceil(lendb / per_page + b)
+    }, indent=4),200, {
+        'Content-Type': 'application/json;charset=UTF-8',
+    }
 if __name__ == "__main__":
  app.run(debug=True, port=27010)

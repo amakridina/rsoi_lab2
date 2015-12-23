@@ -54,7 +54,8 @@ def len_db():
     else:
         return 0;
 
-def Tracks_from_db(page, per_page):
+###############################################
+def tracks_from_db(page, per_page):
     items = []
     cursor = Tracks_db_conn()
     cursor.execute("select * from ")
@@ -62,13 +63,13 @@ def Tracks_from_db(page, per_page):
     i = 0
     for row in rows:
         if i < page * per_page:
-            text = row.title.decode(encoding='ISO-8859-1', errors='strict')
+            text = row.track
             items.append({
-            #'Artist': row.Artist,
-            'ArtistId': row.ArtistId,
-            'Album': row.Album,
-            'Year': row.Year,
-            'Genre':row.Genre
+            'artist': row.artist,
+            'artist_id': row.artist_id,
+            'album': row.album,
+            'year': row.year,
+            'genre':row.genre
             })
             i += 1
         if i >= (page + 1) * per_page:
@@ -76,9 +77,9 @@ def Tracks_from_db(page, per_page):
             break
     return items;
 
-def film_by_id(id):
+def track_by_id(id):
     cursor = Tracks_db_conn()
-    cursor.execute("select * from dbo.main where id=" + id)
+    cursor.execute("select * from tracks where track_id=" + id)
     row = cursor.fetchone()
     if row:
         return row
@@ -88,34 +89,36 @@ def film_by_id(id):
 def len_db_dirs():
     count = 0;
     cursor = Tracks_db_conn()
-    cursor.execute("select * from dbo.directors")
+    cursor.execute("select * from artists")
     cursor1= Tracks_db_conn()
-    cursor1.execute("select * from dbo.main")
+    cursor1.execute("select * from tracks")
     rows = cursor.fetchall()
     rows1 = cursor1.fetchall()
     for row in rows:
         for row1 in rows1:
-            if row1.id_director==row.id_director:
+            if row1.artist_id == row.artist_id:
                 count += 1
     return count;
 
 def artist_from_db(page, per_page):
     cursor = Tracks_db_conn()
-    cursor.execute("select * from dbo.directors")
+    cursor.execute("select * from artists")
     cursor1 = Tracks_db_conn()
-    cursor1.execute("select * from dbo.main")
+    cursor1.execute("select * from tracks")
     rows = cursor.fetchall()
     rows1 = cursor1.fetchall()
     i = 0
     items= []
     for row1 in rows1:
         for row in rows:
-            if row1.id_director==row.id_director:
+            if row1.artist_id == row.artist_id:
                 if i < page * per_page:
                     items.append({
-                    'id_director': row.id_director,
-                    'name': row.name.decode(encoding='ISO-8859-1', errors='strict'),
-                    'title': row1.title.decode(encoding='ISO-8859-1', errors='strict'),
+                    'artist_id': row.artist_id,
+                    'name': row.name
+                    'year_active': row1,
+                    'country': row1.origin,
+                    'genre': row1.genre,
                     })
                     i += 1
                 if i >= (page + 1) * per_page:
@@ -123,37 +126,37 @@ def artist_from_db(page, per_page):
                     break
     return items;
 
-def director_by_id(id):
+def artist_by_id(id):
     cursor = Tracks_db_conn()
-    cursor.execute("select * from dbo.directors where id_director=" + id)
+    cursor.execute("select * from artists where artist_id=" + id)
     row = cursor.fetchone()
     if row:
         return row
     else:
         return 0;
 
-def insert_track(Track, ArtistId, Album, Year, Genre):
+def insert_track(id, artistId, album, year, genre):
     cursor = Tracks_db_conn()
     try:
-        cursor.execute("insert into dbo.main values ("+id+", "+id_director+",'"+title+"','"+duration+"', "+year+", '"+genre+"', "+kinopoisk_rating+")")
+        cursor.execute("insert into Tracks values ("+id+", "+artistId+",'"+ album+"','"+year+"', "+genre+")")
         cursor.commit()
     except pyodbc.IntegrityError:
         return 0
     return 1
 
-def insert_director(id, name, birthday, country):
+def insert_artist(id, name, year, origin, genres):
     cursor = Tracks_db_conn()
     try:
-        cursor.execute("insert into dbo.directors values ("+id+", '"+name+"', '"+birthday+"', '"+country+"')")
+        cursor.execute("insert into artists values ("+id+", '"+name+"', '"+year+"', '"+origin+"', '"+genres"')")
         cursor.commit()
     except pyodbc.IntegrityError:
         return 0
     return 1
 
-def update_director(id, str, value):
+def update_artist(id, str, value):
     cursor = Tracks_db_conn()
     try:
-        cursor.execute("update dbo.directors set "+str+"='"+value+"' where id_director="+id)
+        cursor.execute("update artists set "+str+"='"+value+"' where artist_id="+id)
         cursor.commit()
     except ValueError:
         return 1
@@ -161,14 +164,14 @@ def update_director(id, str, value):
         return 0
     return 1
 
-def update_film(id, str, value):
+def update_track(id, str, value):
     cursor = Tracks_db_conn()
     try:
-        if str == 'title' or str == 'duration' or str == 'genre':
-            cursor.execute("update dbo.main set "+str+"='"+value+"' where id="+id)
+        if str == 'album' or str == 'year' or str == 'genre':
+            cursor.execute("update tracks set "+str+"='"+value+"' where track_id="+id)
             cursor.commit()
         else:
-            cursor.execute("update dbo.main set "+str+"="+value+" where id="+id)
+            cursor.execute("update tracks set "+str+"="+value+" where track_id="+id)
             cursor.commit()
     except ValueError:
         return 1
@@ -176,9 +179,9 @@ def update_film(id, str, value):
         return 0
     return 1
 
-def del_film(id):
+def del_track(track):
     cursor = Tracks_db_conn()
-    cursor.execute("delete from dbo.main where id="+id)
+    cursor.execute("delete from Tracks where Track="+track)
     cursor.commit()
 
 
