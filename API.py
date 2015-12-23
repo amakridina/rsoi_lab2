@@ -88,45 +88,7 @@ def userCode():
 
 
 # получение access_token
-@app.route("/api/oauth2/token", methods=['POST'])
-def access_token():
-    return None
-
-
-########################################
-
-#метод получения статуса пользователя авторизован/не авторизован
-@app.route("/api/status")
-def myStatus():
-    return None
-
-
-#поиск пользователя
-def UserInfo(DB, username):
-    if username == '':
-        return None
-    select_str = ("select "+
-                  "UserName,FirstName,LastName,Telephone,Email "+
-                  "from Users where UserName = '%s'" % username)
-    cursor = DB.execute(select_str)
-    row = cursor.fetchone()
-    if not row:
-        return None
-    return row 
-
-#метод получения информации о пользователе
-@app.route("/api/me", methods=["GET"])
-def me():
-    access_token = request.headers.get('Authorization', '')[len('Bearer '):]
-    Info = get_me(access_token)
-    
-    return jsonify(UserName=Info.UserName,
-                FirstName=Info.FirstName,
-                LastName=Info.LastName,
-                Telephone=Info.Telephone,
-                Email=Info.Email)
-
-@app.route('/oauth/token', methods=['POST'])
+@app.route('/api/oauth2/token', methods=['POST'])
 def get_token():
     try:
         type = request.args.get('type')
@@ -146,8 +108,8 @@ def get_token():
         }
     if type == 'code':
         code = request.args.get('code')
-        phone = code_check(code)
-        if phone == 0:
+        user = code_check(code)
+        if user == 0:
             return json.dumps({'error': 'invalid_grant'}), 400, {
                 'Content-Type': 'application/json;charset=UTF-8',
             }
@@ -160,8 +122,8 @@ def get_token():
                 'Content-Type': 'application/json;charset=UTF-8',
             }
 
-        phone = refresh_token_check(refresh_token)
-        if phone == 0:
+        user = refresh_token_check(refresh_token)
+        if user == 0:
             return json.dumps({'error': 'invalid_grant'}), 400, {
                 'Content-Type': 'application/json;charset=UTF-8',
             }
@@ -174,9 +136,9 @@ def get_token():
         return '', 200
 
     access_token = ''.join(random.choice(string.lowercase) for i in range(30))
-    expire_time = datetime.now() + timedelta(minutes=10)
+    expire_time = 'DATEADD(minute, +10, GETDATE())'
     refresh_token = ''.join(random.choice(string.lowercase) for i in range(30))
-    insert_token(phone, access_token, expire_time, refresh_token)
+    insert_token(user, access_token, expire_time, refresh_token)
     return json.dumps({
         'access_token': access_token,
         'token_type': 'bearer',
@@ -187,6 +149,32 @@ def get_token():
         'Cache-Control': 'no-store',
         'Pragma': 'no-cache',
     }
+
+
+
+########################################
+
+#метод получения статуса пользователя авторизован/не авторизован
+@app.route("/api/status")
+def myStatus():
+    return None
+
+
+#метод получения информации о пользователе
+@app.route("/api/me", methods=["GET"])
+def me():
+    access_token = request.headers.get('Authorization', '')[len('Bearer '):]
+    Info = get_me(access_token)
+
+    if not Info:
+        return json.dumps({'error': 'invalid_token'}), 400, {
+                'Content-Type': 'application/json;charset=UTF-8',
+            }
+    return jsonify(UserName=Info.UserName,
+                FirstName=Info.FirstName,
+                LastName=Info.LastName,
+                Telephone=Info.Telephone,
+                Email=Info.Email)
 
 
 if __name__ == "__main__":
