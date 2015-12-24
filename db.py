@@ -116,8 +116,7 @@ def artist_from_db(page, per_page):
                     items.append({
                     'artist_id': row.artist_id,
                     'name': row.name,
-                    'year_active': row1.years_active,
-                    'country': row1.origin,
+                    'track': row1.track,
                     'genre': row1.genre,
                     })
                     i += 1
