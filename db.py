@@ -47,7 +47,7 @@ def insert_user(username, first_name, last_name, tel, email, password):
 
 def len_db():
     cursor = Tracks_db_conn()
-    cursor.execute("select count(*) from ")
+    cursor.execute("select count(*) from tracks")
     row = cursor.fetchone()
     if row:
         return row[0]
@@ -58,14 +58,14 @@ def len_db():
 def tracks_from_db(page, per_page):
     items = []
     cursor = Tracks_db_conn()
-    cursor.execute("select * from ")
+    cursor.execute("select * from tracks")
     rows = cursor.fetchall()
     i = 0
     for row in rows:
         if i < page * per_page:
             text = row.track
             items.append({
-            'artist': row.artist,
+            'track': row.track,
             'artist_id': row.artist_id,
             'album': row.album,
             'year': row.year,
@@ -115,8 +115,8 @@ def artist_from_db(page, per_page):
                 if i < page * per_page:
                     items.append({
                     'artist_id': row.artist_id,
-                    'name': row.name
-                    'year_active': row1,
+                    'name': row.name,
+                    'year_active': row1.years_active,
                     'country': row1.origin,
                     'genre': row1.genre,
                     })
@@ -135,10 +135,12 @@ def artist_by_id(id):
     else:
         return 0;
 
-def insert_track(id, artistId, album, year, genre):
+def insert_track(id, track, artistId, album, year, genre):
     cursor = Tracks_db_conn()
     try:
-        cursor.execute("insert into Tracks values ("+id+", "+artistId+",'"+ album+"','"+year+"', "+genre+")")
+        cursor.execute("insert into tracks "+
+                       "([track_id],[track],[artist_id],[album],[year],[genre])values ('"
+                       +id+"', '"+track+"', '"+ artistId+"','"+ album+"','"+year+"', '"+genre+"')")
         cursor.commit()
     except pyodbc.IntegrityError:
         return 0
@@ -147,7 +149,8 @@ def insert_track(id, artistId, album, year, genre):
 def insert_artist(id, name, year, origin, genres):
     cursor = Tracks_db_conn()
     try:
-        cursor.execute("insert into artists values ("+id+", '"+name+"', '"+year+"', '"+origin+"', '"+genres"')")
+       
+        cursor.execute("insert into artists values ("+id+", '"+name+"', '"+year+"', '"+origin+"', '"+genres+"')")
         cursor.commit()
     except pyodbc.IntegrityError:
         return 0
@@ -167,11 +170,8 @@ def update_artist(id, str, value):
 def update_track(id, str, value):
     cursor = Tracks_db_conn()
     try:
-        if str == 'album' or str == 'year' or str == 'genre':
-            cursor.execute("update tracks set "+str+"='"+value+"' where track_id="+id)
-            cursor.commit()
-        else:
-            cursor.execute("update tracks set "+str+"="+value+" where track_id="+id)
+        if str == 'album' or str == 'year' or str == 'genre' or str == 'track' or str=='artist_id':
+            cursor.execute("update tracks set "+str+"='"+value+"' where track_id='"+id+"'")
             cursor.commit()
     except ValueError:
         return 1
@@ -181,7 +181,7 @@ def update_track(id, str, value):
 
 def del_track(track):
     cursor = Tracks_db_conn()
-    cursor.execute("delete from Tracks where Track="+track)
+    cursor.execute("delete from tracks where Track="+track)
     cursor.commit()
 
 
@@ -255,9 +255,9 @@ def expired_check(refresh_token):
     row = cursor.fetchone()
     if row:
         print datetime.now()
-        if datetime.strptime(row.expired[:26], '%Y-%m-%d %H:%M:%S.%f') > datetime.now():
+        if datetime.strptime(row.Expires[:26], '%Y-%m-%d %H:%M:%S.%f') > datetime.now():
             return 2
-        if datetime.strptime(row.expired[:26], '%Y-%m-%d %H:%M:%S.%f') < datetime.now():
+        if datetime.strptime(row.Expires[:26], '%Y-%m-%d %H:%M:%S.%f') < datetime.now():
             return 1
     return 0
 
@@ -269,10 +269,10 @@ def expired_check1(access_token):
     if row:
         print datetime.now()
         try:
-            if datetime.strptime(row.expired[:26], '%Y-%m-%d %H:%M:%S.%f')-datetime.now() > time30:
+            if datetime.strptime(row.Expires[:26], '%Y-%m-%d %H:%M:%S.%f')-datetime.now() > time30:
                 print datetime.strptime(row.expired[:26], '%Y-%m-%d %H:%M:%S.%f')
                 return 2
-            if datetime.strptime(row.expired[:26], '%Y-%m-%d %H:%M:%S.%f')-datetime.now() < time30:
+            if datetime.strptime(row.Expires[:26], '%Y-%m-%d %H:%M:%S.%f')-datetime.now() < time30:
                 return 1
         except TypeError:
             return 2
