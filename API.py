@@ -374,7 +374,8 @@ def delete_track(id):
             'Content-Type': 'application/json;charset=UTF-8'}
     row = track_by_id(id)
     if row == 0:
-        return '', 404
+        return json.dumps({'error': 'no id'}), 400, {
+            'Content-Type': 'application/json;charset=UTF-8'}
     del_track(id)
     s = '/tracks/{'+id+'}'
     return json.dumps({

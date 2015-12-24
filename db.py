@@ -179,9 +179,9 @@ def update_track(id, str, value):
         return 0
     return 1
 
-def del_track(track):
+def del_track(id):
     cursor = Tracks_db_conn()
-    cursor.execute("delete from tracks where Track="+track)
+    cursor.execute("delete from tracks where track_id='"+id+"'")
     cursor.commit()
 
 
