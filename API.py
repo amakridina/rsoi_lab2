@@ -1,12 +1,9 @@
 # -*- coding: cp1251 -*-
-from flask import Flask,redirect,request,render_template,jsonify, url_for
-import requests
+from flask import Flask,request,render_template,jsonify, url_for
 import random
 import math
 import string
-import pyodbc
 import json
-import uuid
 import urllib
 import urlparse
 from db import *
@@ -155,10 +152,6 @@ def get_token():
 
 ########################################
 
-#метод получения статуса пользователя авторизован/не авторизован
-@app.route("/api/status")
-def myStatus():
-    return None
 
 
 #метод получения информации о пользователе
@@ -181,15 +174,6 @@ def me():
 #Artist
 @app.route('/artist/', methods=['GET'])
 def get_artist():
-    access_token = request.headers.get('Authorization', '')[len('OAUTH-TOKEN '):]
-    print access_token
-    i = expired_check1(access_token)
-    if i==0:
-        return json.dumps({'error': 'invalid_token'}), 400, {
-            'Content-Type': 'application/json;charset=UTF-8'}
-    if i==1:
-        return json.dumps({'error': 'expired_token'}), 400, {
-            'Content-Type': 'application/json;charset=UTF-8'}
     try:
         per_page = int(request.args.get('per_page', 20))
         if per_page < 20 or per_page > 100:
@@ -289,7 +273,7 @@ def put_artist(id):
         years = request.args.get('years_active')
         origin = request.args.get('origin')
         genre = request.args.get('genre')
-        if name is None or years is None or origin is None or genre is None:
+        if name is None and years is None and origin is None and genre is None:
             raise Exception()
     except:
         return '', 400
@@ -432,7 +416,7 @@ def put_film(id):
         album = request.args.get('album')
         year = request.args.get('year')
         genre = request.args.get('genre')
-        if artist_id is None or year is None or album is None or track is None or genre is None:
+        if artist_id is None and year is None and album is None and track is None and genre is None:
             raise Exception()
     except:
         return '', 400

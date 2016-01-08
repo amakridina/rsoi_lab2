@@ -254,9 +254,9 @@ def expired_check(refresh_token):
     row = cursor.fetchone()
     if row:
         print datetime.now()
-        if datetime.strptime(row.Expires[:26], '%Y-%m-%d %H:%M:%S.%f') > datetime.now():
+        if row.Expires> datetime.now():
             return 2
-        if datetime.strptime(row.Expires[:26], '%Y-%m-%d %H:%M:%S.%f') < datetime.now():
+        if row.Expires < datetime.now():
             return 1
     return 0
 
@@ -268,10 +268,10 @@ def expired_check1(access_token):
     if row:
         print datetime.now()
         try:
-            if datetime.strptime(row.Expires[:26], '%Y-%m-%d %H:%M:%S.%f')-datetime.now() > time30:
+            if row.Expires-datetime.now() > time30:
                 print datetime.strptime(row.expired[:26], '%Y-%m-%d %H:%M:%S.%f')
                 return 2
-            if datetime.strptime(row.Expires[:26], '%Y-%m-%d %H:%M:%S.%f')-datetime.now() < time30:
+            if row.Expires < time30:
                 return 1
         except TypeError:
             return 2
@@ -279,7 +279,7 @@ def expired_check1(access_token):
 
 def expired_refresh(refresh_token):
     cursor = users_db_conn()
-    expire_time = datetime.now() + timedelta(minutes=10)
+    expire_time = 'DATEADD(minute, +10, GETDATE())'
     cursor.execute("update Tokens set expires="+expire_time+" where RefreshToken='" + refresh_token+"'")
     cursor.commit()
     return 1;
